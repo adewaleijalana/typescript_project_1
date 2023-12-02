@@ -4,6 +4,39 @@
 // let clon = projTemp.content.cloneNode(true);
 // document.body.appendChild(clon);
 
+type Validatable = {
+  value: string | number;
+  required?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  min?: number;
+  max?: number;
+}
+
+function validate(validatable: Validatable){
+  let isValid = true;
+  if(validatable.required){
+    isValid = isValid && validatable.value.toString().trim().length !== 0;
+  }
+
+  if(validatable.minLength != null && typeof validatable.value === 'string'){
+    isValid = isValid && validatable.value.length >= validatable.minLength;
+  }
+
+  if(validatable.maxLength != null && typeof validatable.value === 'string'){
+    isValid = isValid && validatable.value.length <= validatable.maxLength;
+  }
+
+  if(validatable.min != null && typeof validatable.value === 'number'){
+    isValid = isValid && validatable.value >= validatable.min
+  }
+
+  if(validatable.max != null && typeof validatable.value === 'number'){
+    isValid = isValid && validatable.value <= validatable.max
+  }
+  return isValid;
+}
+
 function Autobind(_: any, _2: string, descriptor: PropertyDescriptor){
     const originalMethod = descriptor.value
     const adjDescriptor: PropertyDescriptor = {
@@ -46,7 +79,7 @@ class ProjectInput {
       '#people'
     )! as HTMLInputElement;
 
-    this.configure()
+    this.configure();
     this.attach();
   }
 
@@ -54,14 +87,65 @@ class ProjectInput {
     this.hostElement.insertAdjacentElement('afterbegin', this.element);
   }
 
-  @Autobind
-  private submitHandler(event: Event){
-    event.preventDefault();
-    console.log(this.titleInputEl.value);
+  private gettAllUserInputs(): [string, string, string] | void{
+    const enteredTitle = this.titleInputEl.value;
+    const enteredDescription = this.descriptionInputEl.value;
+    const enteredPpl = this.pplInputEl.value;
+
+    const titleValidatable: Validatable = {
+      value: enteredTitle,
+      required: true
+    }
+
+     const enteredDescriptionValidatable: Validatable = {
+      value: enteredDescription,
+      required: true,
+      minLength: 5
+    }
+
+    const enteredPplValidatable: Validatable = {
+      value: +enteredPpl,
+      required: true,
+      min: 1
+    }
+
+    if (
+      // enteredTitle.trim().length === 0 ||
+      // enteredDescription.trim().length === 0 ||
+      // enteredPpl.trim().length === 0
+
+      !validate(titleValidatable) ||
+      !validate(enteredDescriptionValidatable) ||
+      !validate(enteredPplValidatable)
+    ){
+      alert('Invalid input, please enter correct value');
+      return;
+    }else{
+      return [enteredTitle, enteredDescription, enteredPpl];
+    }
+    
   }
 
-  private configure(){
-    this.element.addEventListener('submit', this.submitHandler)
+  private clearAllInputs(){
+    this.titleInputEl.value = '';
+    this.descriptionInputEl.value = '';
+    this.pplInputEl.value = '';
+  }
+
+  @Autobind
+  private submitHandler(event: Event) {
+    event.preventDefault();
+    // console.log(this.titleInputEl.value);
+    const userInputs = this.gettAllUserInputs();
+    if(Array.isArray(userInputs)){
+      const [title, desc, people] = userInputs;
+      console.log(`Title: ${title}; Description: ${desc}; People: ${people}`)
+      this.clearAllInputs();
+  }
+}
+
+  private configure() {
+    this.element.addEventListener('submit', this.submitHandler);
   }
 }
 
