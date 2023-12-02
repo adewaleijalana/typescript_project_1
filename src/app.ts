@@ -11,42 +11,74 @@ type Validatable = {
   maxLength?: number;
   min?: number;
   max?: number;
-}
+};
 
-function validate(validatable: Validatable){
+function validate(validatable: Validatable) {
   let isValid = true;
-  if(validatable.required){
+  if (validatable.required) {
     isValid = isValid && validatable.value.toString().trim().length !== 0;
   }
 
-  if(validatable.minLength != null && typeof validatable.value === 'string'){
+  if (validatable.minLength != null && typeof validatable.value === 'string') {
     isValid = isValid && validatable.value.length >= validatable.minLength;
   }
 
-  if(validatable.maxLength != null && typeof validatable.value === 'string'){
+  if (validatable.maxLength != null && typeof validatable.value === 'string') {
     isValid = isValid && validatable.value.length <= validatable.maxLength;
   }
 
-  if(validatable.min != null && typeof validatable.value === 'number'){
-    isValid = isValid && validatable.value >= validatable.min
+  if (validatable.min != null && typeof validatable.value === 'number') {
+    isValid = isValid && validatable.value >= validatable.min;
   }
 
-  if(validatable.max != null && typeof validatable.value === 'number'){
-    isValid = isValid && validatable.value <= validatable.max
+  if (validatable.max != null && typeof validatable.value === 'number') {
+    isValid = isValid && validatable.value <= validatable.max;
   }
   return isValid;
 }
 
-function Autobind(_: any, _2: string, descriptor: PropertyDescriptor){
-    const originalMethod = descriptor.value
-    const adjDescriptor: PropertyDescriptor = {
-        configurable: true,
-        get() {
-            const boundedFn = originalMethod.bind(this)
-            return boundedFn;
-        },
-    };
-    return adjDescriptor;
+function Autobind(_: any, _2: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+  const adjDescriptor: PropertyDescriptor = {
+    configurable: true,
+    get() {
+      const boundedFn = originalMethod.bind(this);
+      return boundedFn;
+    },
+  };
+  return adjDescriptor;
+}
+
+class ProjectList {
+  tempElement: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLElement;
+
+  constructor(private type: 'active' | 'finished') {
+    this.tempElement = document.getElementById(
+      'project-list'
+    )! as HTMLTemplateElement;
+
+    this.hostElement = document.getElementById('app')! as HTMLDivElement;
+
+    const importedNode = document.importNode(this.tempElement.content, true);
+
+    this.element = importedNode.firstElementChild as HTMLElement;
+    this.element.id = `${this.type}-projects`;
+    this.attach();
+    this.renderContent();
+  }
+
+  private renderContent() {
+    const listId = `${this.type}-projects-list`;
+    this.element.querySelector('ul')!.id = listId;
+    this.element.querySelector('h2')!.textContent =
+      this.type.toUpperCase() + ' PROJECTS';
+  }
+
+  private attach() {
+    this.hostElement.insertAdjacentElement('beforeend', this.element);
+  }
 }
 
 class ProjectInput {
@@ -87,27 +119,27 @@ class ProjectInput {
     this.hostElement.insertAdjacentElement('afterbegin', this.element);
   }
 
-  private gettAllUserInputs(): [string, string, string] | void{
+  private gettAllUserInputs(): [string, string, string] | void {
     const enteredTitle = this.titleInputEl.value;
     const enteredDescription = this.descriptionInputEl.value;
     const enteredPpl = this.pplInputEl.value;
 
     const titleValidatable: Validatable = {
       value: enteredTitle,
-      required: true
-    }
+      required: true,
+    };
 
-     const enteredDescriptionValidatable: Validatable = {
+    const enteredDescriptionValidatable: Validatable = {
       value: enteredDescription,
       required: true,
-      minLength: 5
-    }
+      minLength: 5,
+    };
 
     const enteredPplValidatable: Validatable = {
       value: +enteredPpl,
       required: true,
-      min: 1
-    }
+      min: 1,
+    };
 
     if (
       // enteredTitle.trim().length === 0 ||
@@ -117,16 +149,15 @@ class ProjectInput {
       !validate(titleValidatable) ||
       !validate(enteredDescriptionValidatable) ||
       !validate(enteredPplValidatable)
-    ){
+    ) {
       alert('Invalid input, please enter correct value');
       return;
-    }else{
+    } else {
       return [enteredTitle, enteredDescription, enteredPpl];
     }
-    
   }
 
-  private clearAllInputs(){
+  private clearAllInputs() {
     this.titleInputEl.value = '';
     this.descriptionInputEl.value = '';
     this.pplInputEl.value = '';
@@ -137,12 +168,12 @@ class ProjectInput {
     event.preventDefault();
     // console.log(this.titleInputEl.value);
     const userInputs = this.gettAllUserInputs();
-    if(Array.isArray(userInputs)){
+    if (Array.isArray(userInputs)) {
       const [title, desc, people] = userInputs;
-      console.log(`Title: ${title}; Description: ${desc}; People: ${people}`)
+      console.log(`Title: ${title}; Description: ${desc}; People: ${people}`);
       this.clearAllInputs();
+    }
   }
-}
 
   private configure() {
     this.element.addEventListener('submit', this.submitHandler);
@@ -150,3 +181,5 @@ class ProjectInput {
 }
 
 const projInput = new ProjectInput();
+const activeProjList = new ProjectList('active');
+const finishedProjList = new ProjectList('finished');
