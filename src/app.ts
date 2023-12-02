@@ -4,6 +4,33 @@
 // let clon = projTemp.content.cloneNode(true);
 // document.body.appendChild(clon);
 
+class ProjectState {
+  private projects: any[] = [];
+  private static INSTANCE: ProjectState;
+
+  private constructor() {}
+
+  static getInstance(): ProjectState {
+    if (this.INSTANCE) {
+      return this.INSTANCE;
+    }
+    this.INSTANCE = new ProjectState();
+    return this.INSTANCE;
+  }
+
+  addProject(title: string, description: string, numOfPpl: number) {
+    const newProject = {
+      id: Math.random().toString(),
+      title: title,
+      description: description,
+      people: numOfPpl,
+    };
+    this.projects.push(newProject);
+  }
+}
+
+const projectState = ProjectState.getInstance();
+
 type Validatable = {
   value: string | number;
   required?: boolean;
