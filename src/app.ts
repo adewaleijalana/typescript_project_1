@@ -6,6 +6,7 @@
 
 class ProjectState {
   private projects: any[] = [];
+  private listeners: any[] = [];
   private static INSTANCE: ProjectState;
 
   private constructor() {}
@@ -18,6 +19,10 @@ class ProjectState {
     return this.INSTANCE;
   }
 
+  addListners(listenerFn: Function){
+    this.listeners.push(listenerFn);
+  }
+
   addProject(title: string, description: string, numOfPpl: number) {
     const newProject = {
       id: Math.random().toString(),
@@ -26,6 +31,9 @@ class ProjectState {
       people: numOfPpl,
     };
     this.projects.push(newProject);
+    for(const listerFn of projectState.listeners){
+      listerFn(this.projects.slice());
+    }
   }
 }
 
@@ -80,6 +88,7 @@ class ProjectList {
   tempElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
+  assignedProjects: any[] = [];
 
   constructor(private type: 'active' | 'finished') {
     this.tempElement = document.getElementById(
@@ -92,8 +101,22 @@ class ProjectList {
 
     this.element = importedNode.firstElementChild as HTMLElement;
     this.element.id = `${this.type}-projects`;
+
+    projectState.addListners((projects: any[]) => {
+      this.assignedProjects = projects;
+      this.renderProjects();
+    });
     this.attach();
     this.renderContent();
+  }
+
+  private renderProjects(){
+    const listElements = document.getElementById(`${this.type}-projects-list`)! as HTMLUListElement;
+    for (const prjList of this.assignedProjects){
+      const listItem = document.createElement('li');
+      listItem.textContent = prjList.title;
+      listElements.appendChild(listItem);
+    }
   }
 
   private renderContent() {
@@ -146,10 +169,10 @@ class ProjectInput {
     this.hostElement.insertAdjacentElement('afterbegin', this.element);
   }
 
-  private gettAllUserInputs(): [string, string, string] | void {
+  private gettAllUserInputs(): [string, string, number] | void {
     const enteredTitle = this.titleInputEl.value;
     const enteredDescription = this.descriptionInputEl.value;
-    const enteredPpl = this.pplInputEl.value;
+    const enteredPpl = +this.pplInputEl.value;
 
     const titleValidatable: Validatable = {
       value: enteredTitle,
@@ -198,6 +221,7 @@ class ProjectInput {
     if (Array.isArray(userInputs)) {
       const [title, desc, people] = userInputs;
       console.log(`Title: ${title}; Description: ${desc}; People: ${people}`);
+      projectState.addProject(title, desc, people);
       this.clearAllInputs();
     }
   }
