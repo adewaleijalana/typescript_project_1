@@ -4,9 +4,26 @@
 // let clon = projTemp.content.cloneNode(true);
 // document.body.appendChild(clon);
 
+type Listerner = (items: Project[]) => void;
+
+enum ProjectStatus {
+  ACTIVE,
+  FINISHED,
+}
+
+class Project {
+  constructor(
+    public id: string,
+    public title: string,
+    public description: string,
+    public people: number,
+    public status: ProjectStatus
+  ) {}
+}
+
 class ProjectState {
-  private projects: any[] = [];
-  private listeners: any[] = [];
+  private projects: Project[] = [];
+  private listeners: Listerner[] = [];
   private static INSTANCE: ProjectState;
 
   private constructor() {}
@@ -19,19 +36,20 @@ class ProjectState {
     return this.INSTANCE;
   }
 
-  addListners(listenerFn: Function){
+  addListners(listenerFn: Listerner) {
     this.listeners.push(listenerFn);
   }
 
   addProject(title: string, description: string, numOfPpl: number) {
-    const newProject = {
-      id: Math.random().toString(),
-      title: title,
-      description: description,
-      people: numOfPpl,
-    };
+    const newProject = new Project(
+      Math.random().toString(),
+      title,
+      description,
+      numOfPpl,
+      ProjectStatus.ACTIVE
+    );
     this.projects.push(newProject);
-    for(const listerFn of projectState.listeners){
+    for (const listerFn of projectState.listeners) {
       listerFn(this.projects.slice());
     }
   }
@@ -88,7 +106,7 @@ class ProjectList {
   tempElement: HTMLTemplateElement;
   hostElement: HTMLDivElement;
   element: HTMLElement;
-  assignedProjects: any[] = [];
+  assignedProjects: Project[] = [];
 
   constructor(private type: 'active' | 'finished') {
     this.tempElement = document.getElementById(
@@ -102,17 +120,26 @@ class ProjectList {
     this.element = importedNode.firstElementChild as HTMLElement;
     this.element.id = `${this.type}-projects`;
 
-    projectState.addListners((projects: any[]) => {
-      this.assignedProjects = projects;
+    projectState.addListners((projects: Project[]) => {
+      const relevantProjs = projects.filter((prj) => {
+        if (this.type === 'active') {
+          return prj.status === ProjectStatus.ACTIVE;
+        }
+        return prj.status === ProjectStatus.FINISHED;
+      });
+      this.assignedProjects = relevantProjs;
       this.renderProjects();
     });
     this.attach();
     this.renderContent();
   }
 
-  private renderProjects(){
-    const listElements = document.getElementById(`${this.type}-projects-list`)! as HTMLUListElement;
-    for (const prjList of this.assignedProjects){
+  private renderProjects() {
+    const listElements = document.getElementById(
+      `${this.type}-projects-list`
+    )! as HTMLUListElement;
+    listElements.innerHTML = '';
+    for (const prjList of this.assignedProjects) {
       const listItem = document.createElement('li');
       listItem.textContent = prjList.title;
       listElements.appendChild(listItem);
