@@ -1,31 +1,29 @@
-const path = require('path')
+import { join, resolve as _resolve } from 'path'
 
-module.exports = {
-    entry: './src/app.ts',
-    mode: 'development',
-    devServer: {
-        static: [
-            {
-                directory: path.join(__dirname),
-            },
-        ],
-    },
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist'),
-        publicPath: '/dist/',
-    },
-    devtool: 'inline-source-map',
-    module: {
-        rules: [
-            {
-                test: /\.ts$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
-            }
-        ]
-    },
-    resolve: {
-        extensions: ['.ts', '.js']
-    }
+export const entry = './src/app.ts'
+export const mode = 'development'
+export const devServer = {
+    static: [
+        {
+            directory: join(__dirname),
+        },
+    ],
+}
+export const output = {
+    filename: 'bundle.js',
+    path: _resolve(__dirname, 'dist'),
+    publicPath: '/dist/',
+}
+export const devtool = 'inline-source-map'
+export const module = {
+    rules: [
+        {
+            test: /\.ts$/,
+            use: 'ts-loader',
+            exclude: /node_modules/
+        }
+    ]
+}
+export const resolve = {
+    extensions: ['.ts', '.js']
 }
