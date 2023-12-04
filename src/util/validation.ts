@@ -1,4 +1,3 @@
-
 export type Validatable = {
   value: string | number;
   required?: boolean;
